@@ -22,6 +22,7 @@
     },
 
     "action": {
-        "default_icon": "is.png"
+        "default_icon": "is.png",
+        "default_popup": "popup.html"
     }
 }
