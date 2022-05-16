@@ -3,6 +3,8 @@
 import * as scrap from "./scrap.js";
 
 
+const periodo = 5000;
+
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -11,7 +13,7 @@ async function run2() {
     console.log("CONTENT JS RUNNING IN MAIN!");
 
     while (true) {
-        await sleep(1000);
+        await sleep(periodo);
         console.log("TICK!");
 
         // LINK //////////////////////////////////////////////////////////////////////////////////
@@ -48,6 +50,16 @@ async function run2() {
         dados = dados + scrap.getFormacao(source) + ";";
 
         dados = dados + scrap.getAtividade(source) + ";";
+
+        dados = dados + scrap.getSobre(source) + ";";
+
+        dados = dados + scrap.getExp(source) + ";";
+
+        dados = dados + scrap.getEdu(source) + ";";
+
+        dados = dados + scrap.getCertificados(source) + ";";
+
+        dados = dados + scrap.getCompetencias(source) + ";";
 
         console.log(dados);
 
