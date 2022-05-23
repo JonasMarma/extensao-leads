@@ -5,89 +5,127 @@ import * as scrap from "./scrap.js";
 
 const periodo = 5000;
 
+// Variável onde é armazenado o link que está sendo visitado no tick atual
+let linkAtual = "";
+
+// Variável onde é armazenado o link visitado no último tick
+let linkAntigo = "";
+
+let pagPerfil = false;
+
+function enviarRequest(dados) {
+    // Enviar dados para sheets
+    const request = new XMLHttpRequest();
+
+    request.addEventListener('readystatechange', () => {
+        if (request.readyState === 4 && request.status === 200) {
+            console.log(request, request.responseText);
+        } else if (request.readyState === 4) {
+            //console.error("ERRO AO ACESSAR API" + request.response);
+            console.log("Não recebeu 200");
+        }
+    });
+
+    let url = 'https://script.google.com/macros/s/AKfycbw4wcMDi72KK5MP7JuZp3YuVvE7jhgKprsHfE23-QEgRBuBO_fiLG55MGqvUhYogn0qTg/exec?'
+
+    url += 'data=' + "teste";//btoa(dados);
+
+    request.open('GET', url);
+    request.send();
+
+    console.log("PRONTO!");
+}
+
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function run2() {
+async function run() {
     console.log("CONTENT JS RUNNING IN MAIN!");
+
+    let dadosPerfil = "";
 
     while (true) {
         await sleep(periodo);
+
         console.log("TICK!");
 
-        // LINK //////////////////////////////////////////////////////////////////////////////////
-        console.log("Extraindo link:");
-        let link = window.location.toString();
-        console.log(link);
-
-        if (!(link.includes("linkedin.com/in/"))) {
-            console.log("Não é página de perfil!");
-            return;
-        }
-        
-        console.log("É página de perfil!");
-
-        let dados = Date.now().toString() + ";";
-
-        dados = dados + window.location.toString() + ";"
-
-        // OBTER O HTML DA PÁGINA
-
-        let source = document.body.innerHTML;
-
-        console.log(source);
-
-        source = source.replace(/(\r\n|\n|\r)/gm, "");
+        try {
 
 
-        dados = dados + scrap.getNome(source) + ";";
+            // LINK //////////////////////////////////////////////////////////////////////////////////
+            console.log("Extraindo link:");
+            linkAtual = window.location.toString();
+            console.log(linkAtual);
 
-        dados = dados + scrap.getCargo(source) + ";";
+            // Se acabou de sair de uma página de perfil, enviar os dados para o sheets
+            if (linkAtual != linkAntigo) {
+                if (pagPerfil) {
+                    console.log("ENVIANDO DADOS PARA O SHEETS");
+                    let dados = Date.now().toString() + ";;" + dadosPerfil;
+                    enviarRequest(dados);
 
-        dados = dados + scrap.getEmpresa(source) + ";";
-
-        dados = dados + scrap.getFormacao(source) + ";";
-
-        dados = dados + scrap.getAtividade(source) + ";";
-
-        dados = dados + scrap.getSobre(source) + ";";
-
-        dados = dados + scrap.getExp(source) + ";";
-
-        dados = dados + scrap.getEdu(source) + ";";
-
-        dados = dados + scrap.getCertificados(source) + ";";
-
-        dados = dados + scrap.getCompetencias(source) + ";";
-
-        console.log(dados);
-
-        /*
-        // Enviar dados para sheets
-        const request = new XMLHttpRequest();
-    
-        request.addEventListener('readystatechange', () => {
-            if (request.readyState === 4 && request.status === 200) {
-                console.log(request, request.responseText);
-            } else if (request.readyState === 4) {
-                //console.error("ERRO AO ACESSAR API" + request.response);
-                console.log("Não recebeu 200");
+                    return; // APAGAR!
+                }
             }
-        });
-    
-        url = 'https://script.google.com/macros/s/AKfycbw4wcMDi72KK5MP7JuZp3YuVvE7jhgKprsHfE23-QEgRBuBO_fiLG55MGqvUhYogn0qTg/exec?'
-    
-        url += 'name=' + dados;
-    
-        request.open('GET', url);
-        request.send();
-    
-        console.log("PRONTO!");
-        */
 
-        break;
+            if (!(linkAtual.includes("linkedin.com/in/"))) {
+                console.log("Não é página de perfil!");
+
+                pagPerfil = false;
+
+                // NÃO É PÁGINA DE PERFIL, MAS TENTAR FAZER SCRAPPING DE LINKS DE PERFIS!!
+            }
+            // Se é uma página de perfil, obter os dados do perfil
+            else {
+                console.log("É página de perfil!");
+
+                pagPerfil = true;
+
+                dadosPerfil = linkAtual + ";;"
+
+                // OBTER O HTML DA PÁGINA
+                let source = document.body.innerHTML;
+                //console.log(source);
+
+                // Remover quebras de linha antes de processar
+                source = source.replace(/(\r\n|\n|\r)/gm, "");
+
+                // Fazer o scrapping
+                dadosPerfil = dadosPerfil + scrap.getNome(source) + ";;";
+
+                dadosPerfil = dadosPerfil + scrap.getCargo(source) + ";;";
+
+                dadosPerfil = dadosPerfil + scrap.getEmpresa(source) + ";;";
+
+                dadosPerfil = dadosPerfil + scrap.getFormacao(source) + ";;";
+
+                dadosPerfil = dadosPerfil + scrap.getAtividade(source) + ";;";
+
+                dadosPerfil = dadosPerfil + scrap.getSobre(source) + ";;";
+
+                dadosPerfil = dadosPerfil + scrap.getExp(source) + ";;";
+
+                dadosPerfil = dadosPerfil + scrap.getEdu(source) + ";;";
+
+                dadosPerfil = dadosPerfil + scrap.getCertificados(source) + ";;";
+
+                dadosPerfil = dadosPerfil + scrap.getCompetencias(source) + ";;";
+
+                console.log(dadosPerfil);
+
+                // Os dados do perfil serão enviados quando o usuário mudar de página
+
+            }
+
+        } catch (error) {
+            console.error(error);
+        }
+
+        // A cada tick atualizar o link antigo
+        linkAntigo = linkAtual;
+
     }
 }
 
-run2();
+run();

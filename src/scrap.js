@@ -12,6 +12,18 @@ function higienizar(resposta) {
         resposta = "";
     }
 
+    /**
+    Let ; be the special character
+    If a ; is encountered in the input, replace it with something like ;0.
+    Use ;; as your delimiter
+    So userid = "alpha;dog" and userName = "papa;;0bear" will be translated to
+
+    alpha;0dog;;papa;0;00bear
+    */
+    resposta = resposta.replace(";",";0")
+
+    //resposta = encodeURI(resposta);
+
     return resposta;
 }
 
